@@ -11,6 +11,10 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NextTrain.Service", "NextTr
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NextTrain.Tools", "NextTrain.Tools\NextTrain.Tools.fsproj", "{9F93B2AE-9A85-49BD-A52E-8624EBE2FD28}"
 EndProject
+Project("{CC5FD16D-436D-48AD-A40C-5A424C6E3E79}") = "NextTrain.WebRole", "NextTrain.WebRole\NextTrain.WebRole.ccproj", "{CD263707-5422-46D1-A9AD-FAE95DC8E4E5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NextTrain.WorkerRole", "NextTrain.WorkerRole\NextTrain.WorkerRole.csproj", "{6A8EDB28-6588-46AC-84FC-AA61FDCC28C9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{9F93B2AE-9A85-49BD-A52E-8624EBE2FD28}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F93B2AE-9A85-49BD-A52E-8624EBE2FD28}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F93B2AE-9A85-49BD-A52E-8624EBE2FD28}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD263707-5422-46D1-A9AD-FAE95DC8E4E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD263707-5422-46D1-A9AD-FAE95DC8E4E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD263707-5422-46D1-A9AD-FAE95DC8E4E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD263707-5422-46D1-A9AD-FAE95DC8E4E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A8EDB28-6588-46AC-84FC-AA61FDCC28C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A8EDB28-6588-46AC-84FC-AA61FDCC28C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A8EDB28-6588-46AC-84FC-AA61FDCC28C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A8EDB28-6588-46AC-84FC-AA61FDCC28C9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
