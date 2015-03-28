@@ -99,6 +99,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration.fs" />
     <Compile Include="Levenshtein.fs" />
     <Compile Include="Station.fs" />
     <Compile Include="Matcher.fs" />

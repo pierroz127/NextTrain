@@ -27,7 +27,7 @@ namespace NextTrain.WorkerRole
 
             try
             {
-                this.RunAsync(this.cancellationTokenSource.Token).Wait();
+                this.Run(this.cancellationTokenSource.Token);
             }
             finally
             {
@@ -38,14 +38,26 @@ namespace NextTrain.WorkerRole
         public override bool OnStart()
         {
             // Set the maximum number of concurrent connections
-            ServicePointManager.DefaultConnectionLimit = 12;
+            ServicePointManager.DefaultConnectionLimit = 1;
 
-            _scheduler = StdSchedulerFactory.GetDefaultScheduler();
-            _scheduler.Start();
 
             bool result = base.OnStart();
 
-
+            _scheduler = StdSchedulerFactory.GetDefaultScheduler();
+            _scheduler.JobFactory = new TwitterJobFactory();
+            _scheduler.Start();
+            var job = JobBuilder.Create<TwitterJob>().WithIdentity("twitterJob", "twitterGroup").Build();
+            var trigger =
+                TriggerBuilder.Create()
+                    .WithIdentity("twitterTrigger", "twitterGroup")
+                    .StartNow()
+                    .WithSimpleSchedule(x => x
+                        .WithIntervalInSeconds(45)
+                        .RepeatForever())
+                    .Build();
+            trigger.JobDataMap.Put("lastId", new LastIdManager());
+            _scheduler.ScheduleJob(job, trigger);
+            
             Trace.TraceInformation("NextTrain.WorkerRole has been started");
 
             return result;
@@ -64,19 +76,16 @@ namespace NextTrain.WorkerRole
             Trace.TraceInformation("NextTrain.WorkerRole has stopped");
         }
 
-        private async Task RunAsync(CancellationToken cancellationToken)
+        private void Run(CancellationToken cancellationToken)
         {
-            var job = JobBuilder.Create<TwitterJob>().WithIdentity("twitterJob", "twitterGroup").Build();
-            var trigger =
-                TriggerBuilder.Create()
-                    .WithIdentity("twitterTrigger", "twitterGroup")
-                    .StartNow()
-                    .WithSimpleSchedule(x => x
-                        .WithIntervalInSeconds(45)
-                        .RepeatForever())
-                    .Build();
-            trigger.JobDataMap.Put("lastId", new LastIdManager());
-            _scheduler.ScheduleJob(job, trigger);
+            while (true)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                Thread.Sleep(30 * 1000);
+            }
         }
     }
 }

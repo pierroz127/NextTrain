@@ -48,13 +48,13 @@ namespace NextTrain.WorkerRole
             CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
             
             // retrieve reference to the container
-            CloudBlobContainer container = blobClient.GetContainerReference("nextTrainContainer");
+            CloudBlobContainer container = blobClient.GetContainerReference("nexttrain");
             
             // Create the container if it doesn't already exist.
             container.CreateIfNotExists();
             
             // Retrieve reference to the "lastId" blob named 
-            CloudBlockBlob blockBlob = container.GetBlockBlobReference("lastId.txt");
+            CloudBlockBlob blockBlob = container.GetBlockBlobReference("lastid.txt");
             return blockBlob;
         }
     }

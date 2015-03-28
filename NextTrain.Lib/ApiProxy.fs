@@ -11,16 +11,13 @@ module ApiProxy =
     let getDepartureUrl = sprintf "http://api.transilien.com/gare/%d/depart/"
     let getDepartureArrivalUrl = sprintf "http://api.transilien.com/gare/%d/depart/%d/"
     
-    let apiUserName = ConfigurationManager.AppSettings.Item("sncfApiUserName")
-    let apiPassword = ConfigurationManager.AppSettings.Item("sncfApiPassword")
-
-    let sendTrainRequest count url =
+    let sendTrainRequest (config: NextTrain.Lib.Configuration) count url =
         printfn "GET %s" url
         let body = 
             createRequest Get url
-            |> withBasicAuthentication apiUserName apiPassword
+            |> withBasicAuthentication config.ApiUserName config.ApiPassword
             |> getResponseBody
-
+        printfn "response: %s" body
         let trains = TrainSchedules.Parse(body)
         if trains.Trains.Length = 0
         then 
@@ -28,15 +25,15 @@ module ApiProxy =
             []
         else trains.Trains 
             |> Seq.sortBy (fun t -> t.Date.Value) 
-            |> Seq.take count
+            |> Seq.take ([ count; trains.Trains.Length] |> List.min)
             |> Seq.toList
 
-    let nextTrain departureCode count = 
+    let nextTrain config departureCode count = 
         getDepartureUrl departureCode
-        |> sendTrainRequest count
+        |> sendTrainRequest config count
 
-    let nextTrainTo departureCode arrivalCode count = 
+    let nextTrainTo config departureCode arrivalCode count = 
         getDepartureArrivalUrl departureCode arrivalCode
-        |> sendTrainRequest count
+        |> sendTrainRequest config count
             
         

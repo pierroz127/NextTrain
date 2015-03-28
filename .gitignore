@@ -44,6 +44,8 @@ Temporary Items
 
 bin
 obj
+Debug
+Release
 packages
 *.suo
 *.user

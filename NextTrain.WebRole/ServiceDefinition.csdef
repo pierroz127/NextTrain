@@ -1,4 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ServiceDefinition name="NextTrain.WebRole" xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition" schemaVersion="2014-06.2.4">
-  <WorkerRole name="NextTrain.WorkerRole" vmsize="Small" />
+  <WorkerRole name="NextTrain.WorkerRole" vmsize="Small">
+    <ConfigurationSettings>
+      <Setting name="consumerKey" />
+      <Setting name="consumerSecret" />
+      <Setting name="accessToken" />
+      <Setting name="accessTokenSecret" />
+      <Setting name="sncfApiUserName" />
+      <Setting name="sncfApiPassword" />
+      <Setting name="StorageConnectionString" />
+    </ConfigurationSettings>
+  </WorkerRole>
 </ServiceDefinition>

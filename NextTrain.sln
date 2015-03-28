@@ -3,11 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NextTrain.Lib", "NextTrain\NextTrain.Lib.fsproj", "{F7AF2C92-9A54-4A85-B7CF-1189A16262C3}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NextTrain.Lib", "NextTrain.Lib\NextTrain.Lib.fsproj", "{F7AF2C92-9A54-4A85-B7CF-1189A16262C3}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NextTrain.Tests", "NextTrain.Tests\NextTrain.Tests.fsproj", "{D0641D24-2CA4-481F-8E45-95D96C99655D}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NextTrain.Service", "NextTrain.Service\NextTrain.Service.fsproj", "{F96D9CD6-9CC1-4EC9-A95D-1905A003FE79}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NextTrain.Tools", "NextTrain.Tools\NextTrain.Tools.fsproj", "{9F93B2AE-9A85-49BD-A52E-8624EBE2FD28}"
 EndProject
@@ -29,10 +27,6 @@ Global
 		{D0641D24-2CA4-481F-8E45-95D96C99655D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0641D24-2CA4-481F-8E45-95D96C99655D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0641D24-2CA4-481F-8E45-95D96C99655D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F96D9CD6-9CC1-4EC9-A95D-1905A003FE79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F96D9CD6-9CC1-4EC9-A95D-1905A003FE79}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F96D9CD6-9CC1-4EC9-A95D-1905A003FE79}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F96D9CD6-9CC1-4EC9-A95D-1905A003FE79}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9F93B2AE-9A85-49BD-A52E-8624EBE2FD28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9F93B2AE-9A85-49BD-A52E-8624EBE2FD28}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F93B2AE-9A85-49BD-A52E-8624EBE2FD28}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -53,7 +53,7 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NextTrain\NextTrain.Lib.fsproj">
+    <ProjectReference Include="..\NextTrain.Lib\NextTrain.Lib.fsproj">
       <Name>NextTrain.Lib</Name>
       <Project>{f7af2c92-9a54-4a85-b7cf-1189a16262c3}</Project>
       <Private>True</Private>
