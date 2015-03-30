@@ -1,4 +1,7 @@
-﻿using Microsoft.WindowsAzure;
+﻿using System;
+using Common.Logging.Configuration;
+using Microsoft.FSharp.Core;
+using Microsoft.WindowsAzure;
 using NextTrain.Lib;
 using Quartz;
 using Quartz.Spi;
@@ -26,7 +29,8 @@ namespace NextTrain.WorkerRole
                 CloudConfigurationManager.GetSetting("consumerKey"),
                 CloudConfigurationManager.GetSetting("consumerSecret"),
                 CloudConfigurationManager.GetSetting("accessToken"),
-                CloudConfigurationManager.GetSetting("accessTokenSecret"));
+                CloudConfigurationManager.GetSetting("accessTokenSecret"), 
+                FSharpFunc<string, Unit>.FromConverter(BlobManager.LogTweet));
         }
     }
 }

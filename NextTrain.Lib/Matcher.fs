@@ -16,7 +16,7 @@ module Matcher =
         
     let stationPatterns = 
         let extractStationPatterns (s: Station.StifStation.Row) = 
-            [ s.Libelle; s.Libelle_point_d_arret; s.Libelle_stif_info_voyageurs ] |> List.map(preProcess)
+            [ s.Libelle; s.Libelle_point_d_arret; s.Libelle_stif_info_voyageurs; s.Libelle_sms_gare; s.Nom_gare ] |> List.map(preProcess)
             
         Station.idfStations.Rows
         |> Seq.map(fun s -> {Station = s; Patterns = extractStationPatterns s})

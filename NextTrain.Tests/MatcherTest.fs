@@ -40,3 +40,11 @@ type MatcherTest() =
         Assert.AreEqual(87758649, res.Head.Code)
         Assert.AreEqual(87758656, res.Tail.Head.Code)
         printfn "time = %dms" chrono.ElapsedMilliseconds
+
+    [<Test>]
+    member this.TestGareDeLyon() =
+        let chrono = Stopwatch.StartNew()
+        let res = Matcher.tryFindStations("gare de lyon")
+        Assert.AreEqual(1, res.Length)
+        Assert.AreEqual(87686030, res.Head.Code)
+        printfn "time = %dms" chrono.ElapsedMilliseconds 

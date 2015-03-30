@@ -72,9 +72,10 @@ type TwitterJob(config: Configuration, logger: ITweetLogger) =
       
     member this.processTweet (tweet: Status) =
         sprintf "processing tweet %s from user %s" tweet.Text tweet.User.Name |> logger.logInfo
-        match Bot.processRequest config tweet.Text with
-        | Some(answer) -> this.tweetAnswer answer tweet
-        | None -> printfn "nothing to reply"
+        if (tweet.User.ScreenNameResponse <> "proch1departs" || tweet.Text.Contains("#test")) then
+            match Bot.processRequest config tweet.Text with
+            | Some(answer) -> this.tweetAnswer answer tweet
+            | None -> printfn "nothing to reply"
         sprintf "return id=%d" tweet.StatusID |> logger.logInfo
         tweet.StatusID
 

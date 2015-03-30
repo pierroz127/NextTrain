@@ -9,11 +9,11 @@ using NextTrain.Lib;
 
 namespace NextTrain.WorkerRole
 {
-    public class LastIdManager : ITweetIdManager
+    public class BlobManager : ITweetIdManager
     {
         public void Save(ulong id)
         {
-            CloudBlockBlob blockBlob = getLastIdBlockBlob();
+            CloudBlockBlob blockBlob = getBlockBlob("lastid.txt");
             using (var memStream = new MemoryStream(Encoding.UTF8.GetBytes(id.ToString())))
             {
                 blockBlob.UploadFromStream(memStream);
@@ -22,7 +22,7 @@ namespace NextTrain.WorkerRole
 
         public FSharpOption<UInt64> Read()
         {
-            var blockBlob = getLastIdBlockBlob();
+            var blockBlob = getBlockBlob("lastid.txt");
 
             if (blockBlob.Exists())
             {
@@ -39,7 +39,20 @@ namespace NextTrain.WorkerRole
             return null;
         }
 
-        private CloudBlockBlob getLastIdBlockBlob()
+        public static Unit LogTweet(string msg)
+        {
+            StringBuilder str = new StringBuilder();
+            var blob = getBlockBlob(string.Format("tweetLogs-{0}.csv", DateTime.UtcNow.ToString("yyyyMMdd")));
+            if (blob.Exists())
+            {
+                str.Append(blob.DownloadText(Encoding.UTF8));
+            }
+            str.AppendLine(string.Format("{0};{1}", DateTime.UtcNow.ToString("u"), msg));
+            blob.UploadText(str.ToString(), Encoding.UTF8);
+            return null;
+        }
+
+        private static CloudBlockBlob getBlockBlob(string blobName)
         {
             CloudStorageAccount storageAccount = 
                 CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("StorageConnectionString"));
@@ -54,7 +67,7 @@ namespace NextTrain.WorkerRole
             container.CreateIfNotExists();
             
             // Retrieve reference to the "lastId" blob named 
-            CloudBlockBlob blockBlob = container.GetBlockBlobReference("lastid.txt");
+            CloudBlockBlob blockBlob = container.GetBlockBlobReference(blobName);
             return blockBlob;
         }
     }

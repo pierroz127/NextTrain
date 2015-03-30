@@ -7,5 +7,6 @@ type Configuration = {
     ConsumerSecret: string;
     AccessToken: string;
     AccessTokenSecret: string;
+    Log: string -> unit;
 }
 

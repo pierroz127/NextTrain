@@ -54,6 +54,7 @@ let main argv =
             ConsumerSecret = ConfigurationManager.AppSettings.Item("consumerSecret");
             AccessToken = ConfigurationManager.AppSettings.Item("accessToken");
             AccessTokenSecret = ConfigurationManager.AppSettings.Item("accessTokenSecret");
+            Log = printfn "%s";
         }
         scheduler.JobFactory <- new TwitterJobFactory(config, TweetLogger())
         

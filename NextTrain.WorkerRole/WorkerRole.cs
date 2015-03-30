@@ -52,10 +52,10 @@ namespace NextTrain.WorkerRole
                     .WithIdentity("twitterTrigger", "twitterGroup")
                     .StartNow()
                     .WithSimpleSchedule(x => x
-                        .WithIntervalInSeconds(45)
+                        .WithIntervalInSeconds(60)
                         .RepeatForever())
                     .Build();
-            trigger.JobDataMap.Put("lastId", new LastIdManager());
+            trigger.JobDataMap.Put("lastId", new BlobManager());
             _scheduler.ScheduleJob(job, trigger);
             
             Trace.TraceInformation("NextTrain.WorkerRole has been started");
