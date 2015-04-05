@@ -47,8 +47,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="LevenshteinTest.fs" />
+    <Compile Include="BKTreeTest.fs" />
     <Compile Include="MatcherTest.fs" />
-    <None Include="Script.fsx" />
     <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>

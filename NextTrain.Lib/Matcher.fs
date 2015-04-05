@@ -1,4 +1,18 @@
-﻿namespace NextTrain.Lib
+﻿//   Copyright 2015 Pierre Leroy
+//
+//   Licensed under the Apache License, Version 2.0 (the "License");
+//   you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//   Unless required by applicable law or agreed to in writing, software
+//   distributed under the License is distributed on an "AS IS" BASIS,
+//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+//   limitations under the License.
+
+namespace NextTrain.Lib
 
 open System.Text.RegularExpressions
 open System
@@ -16,8 +30,12 @@ module Matcher =
         
     let stationPatterns = 
         let extractStationPatterns (s: Station.StifStation.Row) = 
-            [ s.Libelle; s.Libelle_point_d_arret; s.Libelle_stif_info_voyageurs; s.Libelle_sms_gare; s.Nom_gare ] |> List.map(preProcess)
-            
+            let patterns = [ s.Libelle; s.Libelle_point_d_arret; s.Libelle_stif_info_voyageurs; s.Libelle_sms_gare; s.Nom_gare ] |> List.map(preProcess)
+            if s.Other_names.Length > 0
+            then patterns |> List.append (s.Other_names.Split(',') |> Seq.toList)
+            else patterns
+
+
         Station.idfStations.Rows
         |> Seq.map(fun s -> {Station = s; Patterns = extractStationPatterns s})
         |> Seq.toList
@@ -31,6 +49,8 @@ module Matcher =
                 if (not (acc1 |> Map.containsKey pattern)) then acc1 |> Map.add pattern s else acc1) acc)) 
             Map.empty 
             
+    let bkTree = BKTree(stationPatterns |> List.fold(fun acc x -> x.Patterns @ acc) [])
+    
     let tryFindStations (sentence: string) = 
         let reg = new Regex("\\s+")
         let words = reg.Split(preProcess sentence)
@@ -40,24 +60,32 @@ module Matcher =
                 stationNames |> List.map(fun s -> Levenshtein.relativeDistance input s) |> List.min
                         
             match stationMap |> Map.tryFind input with
-            | Some(x) ->  {StationName = x.Station.Libelle; 
+            | Some(x) ->  Some({StationName = x.Station.Libelle; 
                 Code = x.Station.Code_uic; 
                 Index = index; 
                 Value = 0.;
-                Length = length;}
-            | None -> stationPatterns |> List.map (fun s -> 
-                    {StationName = s.Station.Libelle; 
-                    Code = s.Station.Code_uic; 
-                    Index = index; 
-                    Value = (computeDistance input s.Patterns);
-                    Length = length;})
-                    |> List.sortBy (fun r -> r.Value)
-                    |> List.head
+                Length = length;})
+//            | None -> stationPatterns |> List.map (fun s -> 
+//                    {StationName = s.Station.Libelle; 
+//                    Code = s.Station.Code_uic; 
+//                    Index = index; 
+//                    Value = (computeDistance input s.Patterns);
+//                    Length = length;})
+//                    |> List.sortBy (fun r -> r.Value)
+//                    |> List.head
+            | None -> 
+                let m = bkTree.findClosest input ((int)(ceil 0.2 * (float)input.Length))
+                match m with
+                | Some(v) -> 
+                    let s = stationMap |> Map.find v.value
+                    Some({StationName = s.Station.Libelle; Code = s.Station.Code_uic; Index = index; Value = (float)v.dist/(float)input.Length; Length = length;})
+                | None -> None   
+                
            
         let tryMatchStation s index length acc1 = 
              match (getClosestStation s index length) with
-             | result when result.Value < 0.2 -> result :: acc1
-             | _ -> acc1  
+             | Some(result) -> result :: acc1
+             | None -> acc1  
             
         let findStationsFromSentenceByIndex acc1 index length = 
             let s = String.Join(" ", words |> Seq.skip index |> Seq.take length |> Seq.toArray)
@@ -66,6 +94,8 @@ module Matcher =
         let findStationsFromSentence acc window =
             [0 .. words.Length - window] 
             |> List.fold (fun acc1 index -> findStationsFromSentenceByIndex acc1 index window) acc 
+            |> List.filter (fun r -> r.Value <= 0.2)
+            |> List.sortBy (fun r -> r.Value)
         
         let rec trimOverlapping acc results = 
             match results with

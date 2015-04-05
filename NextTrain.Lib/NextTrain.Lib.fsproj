@@ -101,6 +101,7 @@
   <ItemGroup>
     <Compile Include="Configuration.fs" />
     <Compile Include="Levenshtein.fs" />
+    <Compile Include="BKTree.fs" />
     <Compile Include="Station.fs" />
     <Compile Include="Matcher.fs" />
     <Compile Include="ApiProxy.fs" />
