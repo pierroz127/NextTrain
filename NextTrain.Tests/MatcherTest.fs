@@ -20,55 +20,95 @@ open System.Diagnostics
 
 [<TestFixture>]
 type MatcherTest() = 
+    let tryFindStationsWithoutCache =  Matcher.tryFindStations (TagCache(Map.empty)) "test"
     [<Test>]
     member this.TestCergySaintChristophe() =
         let chrono = Stopwatch.StartNew()
-        let r = Matcher.tryFindStations "cergy saint christophe"
-        Assert.AreEqual(1, r.Length)
-        Assert.AreEqual(87382499, r.Head.Code)
+        match tryFindStationsWithoutCache "cergy saint christophe" with
+        | Departure(s) -> Assert.AreEqual(87382499, s.Code)
+        | _ -> failwith "Departure was expected"
         printfn "time = %dms" chrono.ElapsedMilliseconds
 
     [<Test>]
     member this.CharleDeGaulleSainGermain() = 
         let chrono = Stopwatch.StartNew()
-        let r = Matcher.tryFindStations "Charles de gaulle etoile saint germain en laye"
-        Assert.AreEqual(2, r.Length)
-        Assert.AreEqual(87758003, r.Head.Code)
-        Assert.AreEqual(87758094, r.Tail.Head.Code)
+        match tryFindStationsWithoutCache "Charles de gaulle etoile saint germain en laye" with
+        | DepartureArrival(d, a) -> 
+            Assert.AreEqual(87758003, d.Code)
+            Assert.AreEqual(87758094, a.Code)
+        | _ -> failwith "DepartureArrival was expected"
         printfn "time = %dms" chrono.ElapsedMilliseconds
 
     [<Test>]
     member this.TestSaintLazare() = 
         let chrono = Stopwatch.StartNew()
-        let r = Matcher.tryFindStations "saint-lazare"
-        Assert.AreEqual(1, r.Length)
-        Assert.AreEqual(87384008, r.Head.Code)
-        printfn "time = %dms" chrono.ElapsedMilliseconds
-
-
+        match tryFindStationsWithoutCache "saint-lazare" with
+        | Departure(s) -> Assert.AreEqual(87384008, s.Code)
+        | _ -> failwith "Departure was expected"
+        
     [<Test>]
     member this.TestCiteUGentilly() = 
         let chrono = Stopwatch.StartNew()
-        let res = Matcher.tryFindStations("de la gare cite universitaire vers gentilly")
-        Assert.AreEqual(2, res.Length)
-        Assert.AreEqual(87758649, res.Head.Code)
-        Assert.AreEqual(87758656, res.Tail.Head.Code)
+        match tryFindStationsWithoutCache "de la gare cite universitaire vers gentilly" with
+        | DepartureArrival(d, a) -> 
+            Assert.AreEqual(87758649, d.Code)
+            Assert.AreEqual(87758656, a.Code)
+        | _ -> failwith "DepartureArrival was expected"
         printfn "time = %dms" chrono.ElapsedMilliseconds
 
     [<Test>]
     member this.TestGareDeLyon() =
         let chrono = Stopwatch.StartNew()
-        let res = Matcher.tryFindStations("gare de lyon")
-        Assert.AreEqual(1, res.Length)
-        Assert.AreEqual(87686030, res.Head.Code)
+        match tryFindStationsWithoutCache "gare de lyon" with
+        | Departure(s) -> Assert.AreEqual(87686030, s.Code)
+        | _ -> failwith "Departure was expected"
         printfn "time = %dms" chrono.ElapsedMilliseconds 
 
 
     [<Test>]
     member this.TestChateletRoissyCharlesDeGaulle() =
         let chrono = Stopwatch.StartNew()
-        let res = Matcher.tryFindStations("chatelet les halles roissy charles de gaulle")
-        Assert.AreEqual(2, res.Length)
-        Assert.AreEqual(87758607, res.Head.Code)
-        Assert.AreEqual(87001479, res.Tail.Head.Code)
+        match tryFindStationsWithoutCache "chatelet les halles roissy charles de gaulle" with
+        | DepartureArrival(d, a) -> 
+            Assert.AreEqual(87758607, d.Code)
+            Assert.AreEqual(87001479, a.Code)
+        | _ -> failwith "DepartureArrival was expected"
         printfn "time = %dms" chrono.ElapsedMilliseconds 
+
+    [<Test>]
+    member this.TestTaggedDeparture() = 
+        match tryFindStationsWithoutCache "cergy saint christophe #CerSC" with
+        | TaggedDeparture(tag, s) -> 
+            Assert.AreEqual("CerSC", tag)
+            Assert.AreEqual(87382499, s.Code)
+        | _ -> failwith "TaggedDeparture was expected"
+
+    [<Test>]
+    member this.TestTaggedDepartureArrival() = 
+        match tryFindStationsWithoutCache "auber cergy saint christophe #AubCerSC" with
+        | TaggedDepartureArrival(tag, d, a) -> 
+            Assert.AreEqual("AubCerSC", tag)
+            Assert.AreEqual(87382499, a.Code)
+            Assert.AreEqual(87758599, d.Code)
+        | _ -> failwith "TaggedDeparture was expected"
+
+    [<Test>]
+    member this.TestGetDepartureFromCache() =
+        let tagCache = TagCache(Map.empty).add "pierroz" (DepartureTrip("cersc", 87382499))
+        match Matcher.tryFindStations tagCache "pierroz" "#cersc" with
+        | Departure(s) -> Assert.AreEqual(87382499, s.Code)
+        | _ -> failwith "Departure was expected"
+
+        let tagCache2 = tagCache.add "John" (DepartureArrivalTrip("ceraub", 123, 345))
+        match Matcher.tryFindStations tagCache2 "Bob" "#cersc" with
+        | NoResult -> Assert.IsTrue(true)
+        | _ -> failwith "No result was expected"
+
+
+        match Matcher.tryFindStations tagCache2 "John" "#ceraub" with
+        | DepartureArrival(d, a) -> 
+            Assert.AreEqual(123, d.Code)
+            Assert.AreEqual(345, a.Code)
+        | _ -> failwith "DepartureArrival was expected"
+
+

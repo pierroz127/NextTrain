@@ -21,9 +21,11 @@ open Quartz
 open Quartz.Job
 open NextTrain.Lib
 
-type ITweetIdManager = 
-    abstract Save: Id: uint64 -> unit
-    abstract Read: unit -> Option<uint64>
+type IDataManager = 
+    abstract SaveId: Id: uint64 -> unit
+    abstract ReadId: unit -> Option<uint64>
+    abstract SaveCache: tagCache: TagCache -> unit
+    abstract ReadCache: unit -> TagCache
 
 type ITweetLogger = 
     abstract logDebug: msg: string -> unit
@@ -31,6 +33,7 @@ type ITweetLogger =
     abstract logWarn: msg: string -> unit
     abstract logError : msg: string -> unit
 
+type TweetResult = {tweetId: uint64; userName: string; botResult: BotResult;}
     
 [<DisallowConcurrentExecution>]
 type TwitterJob(config: Configuration, logger: ITweetLogger) =
@@ -43,6 +46,17 @@ type TwitterJob(config: Configuration, logger: ITweetLogger) =
         let authorizer = new SingleUserAuthorizer()       
         authorizer.CredentialStore <- credentialStore  
         new TwitterContext(authorizer)
+        
+    let save (dataManager: IDataManager) (tagCache: TagCache) (tweetResults: TweetResult list) = 
+        let maxTweet = tweetResults |> List.maxBy(fun t -> t.tweetId)
+        dataManager.SaveId maxTweet.tweetId
+        let newTagCache = 
+            tweetResults
+            |> List.fold(fun (acc: TagCache) t ->
+                match t.botResult with 
+                | TaggedResult(trip, res) -> acc.add t.userName trip
+                | _ -> acc) tagCache
+        dataManager.SaveCache newTagCache
 
     let listen (sinceId: Option<uint64>) = 
         let listenWithSinceId sinceId = 
@@ -70,28 +84,33 @@ type TwitterJob(config: Configuration, logger: ITweetLogger) =
         member this.Execute(context: IJobExecutionContext) = 
             try
                 sprintf "executing job" |> logger.logInfo
-                let idManager = context.MergedJobDataMap.["lastId"] :?> ITweetIdManager
-                let tweets = listen (idManager.Read())
+                let dataManager = context.MergedJobDataMap.["lastId"] :?> IDataManager
+                let tagCache = dataManager.ReadCache()
+                let tweets = listen (dataManager.ReadId())
                 if Seq.length tweets > 0 
                 then
                     tweets
                     |> Seq.toList
-                    |> List.map(this.processTweet)
-                    |> List.max  
-                    |> idManager.Save
+                    |> List.map(this.processTweet tagCache)
+                    |> save dataManager tagCache
                 else 
                     sprintf "no tweet for now..." |> logger.logInfo
             with
             | ex -> sprintf "Error: %s %s" (ex.ToString()) ex.StackTrace |> logger.logError
       
-    member this.processTweet (tweet: Status) =
-        sprintf "processing tweet %s from user %s" tweet.Text tweet.User.Name |> logger.logInfo
-        if (tweet.User.ScreenNameResponse <> "proch1departs" || tweet.Text.Contains("#test")) then
-            match Bot.processRequest config tweet.Text with
-            | Some(answer) -> this.tweetAnswer answer tweet
-            | None -> printfn "nothing to reply"
-        sprintf "return id=%d" tweet.StatusID |> logger.logInfo
-        tweet.StatusID
+    member this.processTweet tagCache (tweet: Status) =
+        let userName = tweet.User.ScreenNameResponse 
+        sprintf "processing tweet %s from user %s" tweet.Text userName |> logger.logInfo
+        if (userName <> "proch1departs" || tweet.Text.Contains("#test")) 
+        then
+            let res = Bot.processRequest config tagCache userName tweet.Text 
+            match res with
+            | Result(answer) | TaggedResult(_, answer) -> this.tweetAnswer answer tweet
+            | EmptyBotResult -> printfn "nothing to reply"
+            sprintf "return id=%d" tweet.StatusID |> logger.logInfo
+            {tweetId=tweet.StatusID; userName=userName; botResult=res;}
+        else 
+            {tweetId=tweet.StatusID; userName=userName; botResult=EmptyBotResult; }
 
     member this.tweetAnswer text tweet = 
         try

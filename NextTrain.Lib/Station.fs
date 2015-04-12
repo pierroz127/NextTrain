@@ -18,6 +18,7 @@ open FSharp.Data
 
 module Station =      
     type StifStation = CsvProvider<"sncf-gares-et-arrets-transilien-ile-de-france.csv", ";">
+
     let idfStations = StifStation.Load("sncf-gares-et-arrets-transilien-ile-de-france.csv")
     
     let length = idfStations.Rows |> Seq.length

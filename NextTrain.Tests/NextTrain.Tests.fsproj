@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="LevenshteinTest.fs" />
     <Compile Include="BKTreeTest.fs" />
+    <Compile Include="TagCacheTest.fs" />
     <Compile Include="MatcherTest.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />

@@ -20,15 +20,15 @@ open Quartz.Spi
 open Quartz.Impl
 open NextTrain.Lib
 
-type ToolIdManager(fileName) =
-    interface ITweetIdManager with
-        member this.Save(sinceId: uint64) = 
+type ToolIdManager(fileName, cacheName) =
+    interface IDataManager with
+        member this.SaveId(sinceId: uint64) = 
             use fs = new FileStream(fileName, FileMode.Create, FileAccess.Write)
             use wr = new StreamWriter(fs)
             wr.WriteLine(sinceId)
             printfn "write sinceId=%d" sinceId
 
-        member this.Read() = 
+        member this.ReadId() = 
             if not (File.Exists(fileName))
             then None
             else
@@ -37,6 +37,16 @@ type ToolIdManager(fileName) =
                 printfn "read sinceId=%d" sinceId
                 Some(sinceId)
 
+        member this.SaveCache tagCache = 
+            use fs = new FileStream(cacheName, FileMode.Create, FileAccess.Write)
+            use wr = new StreamWriter(fs)
+            wr.WriteLine(tagCache.toJson)
+
+        member this.ReadCache() =
+            use rdr = new StreamReader(cacheName)
+            let tagCache = TagCache(Map.empty)
+            tagCache.fromJson (rdr.ReadLine())
+            
 type TweetLogger() =
     interface ITweetLogger with
         member this.logDebug(msg: string) =
@@ -73,7 +83,7 @@ let main argv =
         scheduler.JobFactory <- new TwitterJobFactory(config, TweetLogger())
         
         // define the job and tie it to our HelloJob class
-        let lastIdManager = ToolIdManager(ConfigurationManager.AppSettings.["sinceIdFileName"])
+        let lastIdManager = ToolIdManager(ConfigurationManager.AppSettings.["sinceIdFileName"], ConfigurationManager.AppSettings.["cacheFileName"])
         let job = JobBuilder.Create<TwitterJob>().WithIdentity("twitterJob", "twitterGroup").Build()
         let sched = Action<_>(fun (x: SimpleScheduleBuilder) -> x.WithIntervalInSeconds(45).RepeatForever() |> ignore)
         let trigger = TriggerBuilder.Create().WithIdentity("twitterTrigger", "twitterGroup").StartNow().WithSimpleSchedule(sched).Build()

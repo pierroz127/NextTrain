@@ -18,9 +18,19 @@ open System.Text.RegularExpressions
 open System
 open NextTrain.Lib
 
+type StationResult = {StationName: string; Code: int; Value: float; Index: int; Length: int}
+    
+type MatcherResult = 
+| Departure of StationResult
+| DepartureArrival of StationResult * StationResult
+| TaggedDeparture of string * StationResult
+| TaggedDepartureArrival of string * StationResult * StationResult
+| NoResult
+
 module Matcher =
-    type Result = {StationName: string; Code: int; Value: float; Index: int; Length: int}
     type StationPattern = {Station: Station.StifStation.Row; Patterns: string list}
+
+    let rHashTag = new Regex("#(?<tag>\w+)")
 
     let preProcess (s: string) = 
         let s1 = s.Replace("-", " ")
@@ -51,10 +61,11 @@ module Matcher =
             
     let bkTree = BKTree(stationPatterns |> List.fold(fun acc x -> x.Patterns @ acc) [])
     
-    let tryFindStations (sentence: string) = 
+    let tryFindStations (tagCache: TagCache) user sentence = 
         let reg = new Regex("\\s+")
         let words = reg.Split(preProcess sentence)
-                
+
+               
         let getClosestStation input index length = 
             let computeDistance (input: string) (stationNames: string list) =
                 stationNames |> List.map(fun s -> Levenshtein.relativeDistance input s) |> List.min
@@ -78,7 +89,12 @@ module Matcher =
                 match m with
                 | Some(v) -> 
                     let s = stationMap |> Map.find v.value
-                    Some({StationName = s.Station.Libelle; Code = s.Station.Code_uic; Index = index; Value = (float)v.dist/(float)input.Length; Length = length;})
+                    Some(
+                        {StationName = s.Station.Libelle; 
+                        Code = s.Station.Code_uic; 
+                        Index = index; 
+                        Value = (float)v.dist/(float)input.Length; 
+                        Length = length;})
                 | None -> None   
                 
            
@@ -102,8 +118,36 @@ module Matcher =
             | head :: tail -> trimOverlapping (head :: acc) (tail |> List.filter (fun r -> (r.Index + r.Length - 1) < head.Index || r.Index > (head.Index + head.Length - 1) ) )
             | [] -> acc
 
-        [1..4] 
-        |> List.fold (fun acc window -> findStationsFromSentence acc window) []
-        |> List.sortBy (fun r -> r.Value) 
-        |> trimOverlapping []
-        |> List.sortBy (fun r -> r.Index)
+        let getStationResultFromCode code = 
+            {StationName = Station.getNameFromUicCode code; Code = code; Value = 0.; Index = 0; Length = 0;}
+
+        let getResultFromTag tag = 
+            match tagCache.tryFindTrip user tag with
+            | Some(trip) -> 
+                match trip with
+                | DepartureTrip(tag, s) -> Departure(getStationResultFromCode s)
+                | DepartureArrivalTrip(tag, d, a) -> DepartureArrival(getStationResultFromCode d, getStationResultFromCode a)
+            | None -> NoResult
+
+        let results =
+            [1..4] 
+            |> List.fold (fun acc window -> findStationsFromSentence acc window) []
+            |> List.sortBy (fun r -> r.Value) 
+            |> trimOverlapping []
+            |> List.sortBy (fun r -> r.Index)
+
+        let m = rHashTag.Match(sentence)
+        if m.Success 
+        then
+            let tag = m.Groups.["tag"].Value
+            match results with
+            | [] -> getResultFromTag tag
+            | [res] -> TaggedDeparture(tag, res)
+            | d :: a :: tail -> TaggedDepartureArrival(tag, d, a)
+        else 
+            match results with
+            | [] -> NoResult
+            | [res] -> Departure(res)
+            | d :: a :: tail -> DepartureArrival(d, a)
+
+
